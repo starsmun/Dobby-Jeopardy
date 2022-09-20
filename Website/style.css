@@ -1,0 +1,14 @@
+body {
+	margin: 2vh;
+	position: absolute;
+}
+
+#DollarTable {
+	position: relative;
+	display:grid;
+  	grid-template-columns: 35vw 35vw;
+	rid-template-rows: 16vh;
+  	grid-column-gap: 2.5vw;
+  	grid-row-gap: 4vh;
+	
+}
