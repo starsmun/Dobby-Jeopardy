@@ -1,0 +1,197 @@
+﻿@model Dobby_Jeopardy.models.GameBoards
+
+@{
+    ViewBag.Title = "Details";
+    Layout = null;
+    string[][] Board = new string[6][];
+    string[] temp = Model.fakedBoard.Split('\n');
+
+    for (int i = 0; i < 6; i++)
+    {
+        Board[i] = temp[i].Split(';');
+    }
+
+}
+
+<!DOCTYPE html>
+<style>
+    body {
+        margin: 0;
+    }
+
+    .GameBoard {
+        display: grid;
+        grid-template-columns: calc(16.6vw - 12px) calc(16.6vw - 12px) calc(16.6vw - 12px) calc(16.6vw - 12px) calc(16.6vw - 12px) calc(16.6vw - 12px);
+        grid-template-rows: calc(16.6vh - 16px) calc(16.6vh - 16px) calc(16.6vh - 16px) calc(16.6vh - 16px) calc(16.6vh - 16px);
+        gap: 8px 8px;
+        background-color: black;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    .GameBoard > div {
+        background-image: url("../../Content/Images/Question Background.png");
+        background-size: 100% 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1vw;
+        position: relative;
+        font-size: 120px;
+        line-height: 1.6vw;
+        overflow: hidden;
+        text-align: center;
+        text-shadow: 2px 2px 4px #000000;
+        line-break: auto;
+    }
+
+    #innerDiv {
+        width: calc(16.6vw - 12px);
+        position: fixed;
+        height: calc(16.6vh - 12px);
+        background-color: green;
+    }
+
+    .fullscreen {
+        z-index: 9999;
+        top: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        transition: 1s linear;
+        left: 0 !important;
+    }
+
+    .GameBoard > div::after {
+        display: inline-block;
+        width: 100%;
+    }
+
+
+</style>
+
+
+<script>
+    var haveEvents = 'GamepadEvent' in window;
+    var haveWebkitEvents = 'WebKitGamepadEvent' in window;
+    var controllers = {};
+    var rAF = window.mozRequestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.requestAnimationFrame;
+
+    function connecthandler(e) {
+        controllers[e.gamepad.index] = e.gamepad;
+        rAF(updateStatus);
+    }
+    function disconnecthandler(e) {
+        delete controllers[gamepad.index];
+    }
+
+    function updateStatus() {
+        scangamepads();
+        for (j in controllers) {
+            var controller = controllers[j];
+
+            for (var i = 0; i < controller.buttons.length; i++) {
+                var val = controller.buttons[i];
+
+                var touched = false;
+                if (typeof (val) == "object") {
+                    pressed = val.pressed;
+                    if ('touched' in val) {
+                        touched = val.touched;
+                    }
+                    val = val.value;
+                }
+
+
+                if (pressed) {
+                    console.log("I got pressed");
+                }
+            }
+
+        }
+        rAF(updateStatus);
+    }
+
+    function scangamepads() {
+        var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
+        for (var i = 0; i < gamepads.length; i++) {
+            if (gamepads[i] && (gamepads[i].index in controllers)) {
+                controllers[gamepads[i].index] = gamepads[i];
+            }
+        }
+    }
+
+    if (haveEvents) {
+        window.addEventListener("gamepadconnected", connecthandler);
+        window.addEventListener("gamepaddisconnected", disconnecthandler);
+    } else if (haveWebkitEvents) {
+        window.addEventListener("webkitgamepadconnected", connecthandler);
+        window.addEventListener("webkitgamepaddisconnected", disconnecthandler);
+    } else {
+        setInterval(scangamepads, 500);
+    }
+
+
+
+    async function SquareClicked(row, column) {
+        console.log(navigator.getGamepads());
+        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+        const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+
+        if (!$('#' + row + column + " > #innerDiv").length) {
+            $('#' + row + column).html('');
+            jQuery("<div/>", { id: "innerDiv", style: "top: " + (((vh * 0.166) + 32) + ((vh * 0.158) * (row - 1))) + "px ; left: " + (20 + ((vw * 0.164) * (column - 1))) + "px" }).appendTo('#' + row + column);
+            await waiting(50);
+            $('#' + row + column + " > #innerDiv").toggleClass('fullscreen');
+            await waiting(1000);
+            $('#' + row + column + " > #innerDiv").attr('onclick', "FullscreenClicked(" + row + "," + column + ")");
+
+            console.log(row.toString() + column.toString());
+        }
+    }
+
+    async function FullscreenClicked(row, column) {
+        await waiting(100);
+        $('#' + row + column + " > #innerDiv").remove();
+    }
+
+    function waiting(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
+
+
+</script>
+
+
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="~/Content/Custom.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <title></title>
+</head>
+<body>
+    <div id="QuestionHeaders" class="GameBoard" style="grid-template-rows: calc(16.6vh - 10px); padding-bottom: 2px ">
+        @{
+            for (int j = 0; j < 6; j++)
+            {
+                <div style="font-family: Helvetica Black; font-size: 1.8vw; color: white; ">@Board[0][j]</div>
+                }
+        }
+    </div>
+    <div id="Questions" class="GameBoard">
+        @{
+            for (int i = 1; i < 6; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    <div id="@i@(j+1)" onclick="SquareClicked(@i,@(j+1))">@Board[i][j]</div>
+                }
+            }
+        }
+
+    </div>
+</body>
+</html>
